@@ -1,12 +1,16 @@
 package com.example.basicactivity
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
+import androidx.fragment.app.Fragment
 import com.example.basicactivity.databinding.FragmentFirstBinding
+
 
 
 /**
@@ -20,6 +24,9 @@ class FirstFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
     private lateinit var mediaRecorder : MediaRecorder
+    private val REQUEST_RECORD_AUDIO_PERMISSION = 200
+    private var permissionToRecordAccepted = false
+    private val permissions = arrayOf<String>(Manifest.permission.RECORD_AUDIO)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,29 +34,38 @@ class FirstFragment : Fragment() {
     ): View? {
 
         _binding = FragmentFirstBinding.inflate(inflater, container, false)
-        
+        activity?.let {
+            ActivityCompat.requestPermissions(
+                it, permissions,
+                REQUEST_RECORD_AUDIO_PERMISSION)
+        }
         return binding.root
 
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_2_TS);
-        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mediaRecorder.setOutputFile("/home/pabarqlop/Documents");
-        mediaRecorder.prepare();
-        mediaRecorder.start();   // Recording is now started
-
-        mediaRecorder.stop();
-        mediaRecorder.reset();   // You can reuse the object by going back to setAudioSource() step
-        mediaRecorder.release(); // Now the object cannot be reused
-
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        permissionToRecordAccepted = if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        } else {
+            false
+        }
+        if (!permissionToRecordAccepted)
+            activity?.finish();
     }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
+
+
+
 }
